@@ -1,70 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Self-Loan Tracker | Practical Money Tools</title>
-
-<!-- ── PWA meta ──────────────────────────────────────────────────────── -->
-<meta name="theme-color" content="#0f766e">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="SelfLoan">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="description" content="Track index fund drawdowns and repayments against live market performance">
-
-<!-- ── PWA manifest & icons ─────────────────────────────────────────── -->
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
-
-<!-- ── Fonts ─────────────────────────────────────────────────────────── -->
-<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
-
-<!-- ── Theme init: runs before paint to prevent flash ────────────────── -->
-<script>
-  (function() {
-    var saved = localStorage.getItem("pmt-theme");
-    if (saved === "dark" || (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
-      document.documentElement.classList.add("dark");
-    }
-  })();
-</script>
-
-<!-- ── Styles ─────────────────────────────────────────────────────────── -->
-<link rel="stylesheet" href="styles.css">
-
-<!-- ── React (UMD, no build step) ────────────────────────────────────── -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
-
-<!-- Cloudflare Web Analytics -->
-<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "fe9f0092a9784ddd9af4bed63f1fa253"}'></script>
-</head>
-<body>
-
-<div id="root"></div>
-
-<!-- ── Service Worker registration ───────────────────────────────────── -->
-<script>
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", function() {
-      navigator.serviceWorker
-        .register("sw.js")
-        .then(function(reg) {
-          console.log("[SLT] SW registered:", reg.scope);
-        })
-        .catch(function(err) {
-          console.warn("[SLT] SW registration failed:", err);
-        });
-    });
-  }
-</script>
-
-<!-- ── App ────────────────────────────────────────────────────────────── -->
-<script type="text/babel">
 /* ============================================================
    Self-Loan Tracker — script.js
    All logic identical to original. Colours read from CSS
@@ -1548,8 +1481,3 @@ function App() {
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);
-
-</script>
-
-</body>
-</html>

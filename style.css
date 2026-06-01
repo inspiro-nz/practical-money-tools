@@ -1,0 +1,142 @@
+```css
+:root {
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --primary: #0f766e;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+}
+
+.container {
+    width: min(92%, 1100px);
+    margin: 0 auto;
+}
+
+header {
+    background: white;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+}
+
+.nav {
+    min-height: 70px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+nav {
+    display: flex;
+    gap: 1rem;
+}
+
+nav a,
+.logo {
+    text-decoration: none;
+    color: var(--text);
+}
+
+.hero {
+    padding: 6rem 0;
+    text-align: center;
+}
+
+.hero h1 {
+    margin-bottom: 1rem;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+}
+
+.hero p {
+    max-width: 700px;
+    margin: 0 auto 2rem;
+    color: var(--muted);
+}
+
+.button {
+    display: inline-block;
+    background: var(--primary);
+    color: white;
+    padding: 0.8rem 1.2rem;
+    border-radius: 8px;
+    text-decoration: none;
+}
+
+.section {
+    padding: 4rem 0;
+}
+
+.alt {
+    background: #f1f5f9;
+}
+
+.card-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.card h3 {
+    margin-bottom: 0.75rem;
+}
+
+.card a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.section h2 {
+    margin-bottom: 1.5rem;
+}
+
+.disclaimer {
+    border-top: 1px solid var(--border);
+}
+
+footer {
+    border-top: 1px solid var(--border);
+    text-align: center;
+    padding: 1.5rem;
+    background: white;
+}
+
+@media (max-width: 700px) {
+
+    .nav {
+        flex-direction: column;
+        padding: 1rem 0;
+        gap: 1rem;
+    }
+
+    nav {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .hero {
+        padding: 4rem 0;
+    }
+}
+```

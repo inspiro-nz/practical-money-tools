@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Car Upgrade Cost Calculator | Practical Money Tools</title>
+<meta name="description" content="Calculate the true cost of upgrading your car — including depreciation, running costs, and what the money could grow to if invested instead.">
+<meta property="og:title" content="Car Upgrade Cost Calculator | Practical Money Tools">
+<meta property="og:description" content="Understand what upgrading your car really costs.">
+<meta property="og:type" content="website">
+
+<script>
+(function(){
+  var s=localStorage.getItem("pmt-theme");
+  if(s==="dark"||(!s&&window.matchMedia("(prefers-color-scheme:dark)").matches))
+    document.documentElement.classList.add("dark");
+})();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token":"fe9f0092a9784ddd9af4bed63f1fa253"}'></script>
+
+<style>
+:root {
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --text: #111827;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --primary: #0f766e;
+  --primary-dark: #115e59;
+  --shadow: 0 1px 3px rgba(0,0,0,.05), 0 10px 30px rgba(0,0,0,.06);
+  --danger: #ef4444;
+  --success: #22c55e;
+  --warning: #f59e0b;
+}
+
+.dark {
+  --bg: #0f172a;
+  --card: #1e293b;
+  --text: #f8fafc;
+  --muted: #cbd5e1;
+  --border: #334155;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: Inter, system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+}
+
+.container { width: min(92%, 1180px); margin: 0 auto; }
+.narrow { max-width: 760px; }
+
+/* ── Header ─────────────────────────────────────────────────────────── */
+header {
+  position: sticky;
+  top: 0;
+  background: rgba(255,255,255,.9);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  z-index: 100;
+}
+.dark header { background: rgba(15,23,42,.9); }
+
+.nav {
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  text-decoration: none;
+  color: var(--text);
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+nav { display: flex; gap: 1.25rem; align-items: center; }
+nav a { color: var(--muted); text-decoration: none; font-size: 0.9rem; transition: color .15s; }
+nav a:hover { color: var(--primary); }
+
+.theme-toggle {
+  border: 1px solid var(--border);
+  background: var(--card);
+  padding: .55rem .75rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* ── Tool hero ───────────────────────────────────────────────────────── */
+.tool-hero {
+  padding: 4rem 0 2.5rem;
+  background: radial-gradient(circle at top, rgba(15,118,110,.12), transparent 60%);
+}
+
+.eyebrow {
+  color: var(--primary);
+  font-weight: 700;
+  letter-spacing: .08em;
+  font-size: 0.8rem;
+  margin-bottom: 0.75rem;
+}
+
+.tool-hero h1 {
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  line-height: 1.15;
+  margin-bottom: 1rem;
+}
+
+.tool-hero p {
+  color: var(--muted);
+  max-width: 600px;
+  font-size: 1.05rem;
+}
+
+/* ── Sections ────────────────────────────────────────────────────────── */
+.section { padding: 3rem 0; }
+.alt { background: rgba(148,163,184,.07); }
+
+/* ── Input cards ─────────────────────────────────────────────────────── */
+.input-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.input-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  padding: 1.75rem;
+}
+
+.input-card h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--muted);
+}
+
+.form-group { margin-bottom: 1.1rem; }
+.form-group:last-child { margin-bottom: 0; }
+
+.form-group label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.35rem;
+}
+
+.label-note { font-weight: 400; font-style: italic; color: var(--muted); }
+
+.auto-badge {
+  font-size: 0.68rem;
+  background: rgba(15,118,110,.12);
+  color: var(--primary);
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.sym {
+  position: absolute;
+  pointer-events: none;
+  color: var(--muted);
+  font-size: 0.9rem;
+  z-index: 1;
+}
+.sym-left  { left: 0.7rem; }
+.sym-right { right: 0.7rem; }
+
+.input-wrap input[type="number"] {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: border-color .15s, box-shadow .15s;
+  -moz-appearance: textfield;
+}
+.input-wrap input[type="number"]::-webkit-inner-spin-button,
+.input-wrap input[type="number"]::-webkit-outer-spin-button { opacity: 1; }
+.input-wrap.has-right input[type="number"]::-webkit-inner-spin-button,
+.input-wrap.has-right input[type="number"]::-webkit-outer-spin-button { display: none; }
+.input-wrap input[type="number"]:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(15,118,110,.1);
+}
+
+.input-wrap.has-left  input { padding-left: 1.7rem; }
+.input-wrap.has-right input { padding-right: 2.1rem; }
+
+.hint {
+  font-size: 0.74rem;
+  color: var(--muted);
+  margin-top: 0.3rem;
+  line-height: 1.4;
+}
+
+/* Range slider */
+.range-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+input[type="range"] {
+  flex: 1;
+  -webkit-appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--primary);
+  cursor: pointer;
+  border: 2px solid var(--card);
+  box-shadow: 0 1px 4px rgba(0,0,0,.25);
+}
+
+.range-val {
+  min-width: 5ch;
+  text-align: right;
+  font-weight: 800;
+  color: var(--primary);
+  font-size: 1.05rem;
+  white-space: nowrap;
+}
+
+/* Car value preview strip */
+.value-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  margin-top: 0.9rem;
+  padding: 0.75rem 1rem;
+  background: rgba(15,118,110,.06);
+  border: 1px solid rgba(15,118,110,.15);
+  border-radius: 10px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.value-preview strong { color: var(--text); font-weight: 700; }
+
+/* Depreciation advanced section */
+details { margin-top: 1.1rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+
+summary {
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  user-select: none;
+}
+summary::-webkit-details-marker { display: none; }
+summary::before { content: "▸"; display: inline-block; transition: transform .2s; }
+details[open] summary::before { transform: rotate(90deg); }
+
+.dep-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+/* ── Result cards ────────────────────────────────────────────────────── */
+.results-heading {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+}
+
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.result-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 1.4rem;
+}
+
+.result-card.accent {
+  border-color: var(--primary);
+  background: rgba(15,118,110,.05);
+}
+
+.result-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  margin-bottom: 0.5rem;
+}
+
+.result-value {
+  font-size: 1.65rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--primary);
+}
+
+.result-value.bad     { color: var(--danger); }
+.result-value.good    { color: var(--success); }
+.result-value.neutral { color: var(--warning); }
+
+.result-sub {
+  font-size: 0.76rem;
+  color: var(--muted);
+  margin-top: 0.35rem;
+  line-height: 1.4;
+}
+
+/* ── Chart ───────────────────────────────────────────────────────────── */
+.chart-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  padding: 1.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.chart-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.chart-title { font-size: 1rem; font-weight: 700; }
+
+.chart-legend {
+  display: flex;
+  gap: 1.25rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 0.35rem;
+  vertical-align: middle;
+}
+
+.chart-wrap { position: relative; height: 320px; }
+
+/* ── Disclaimer ──────────────────────────────────────────────────────── */
+.disclaimer { border-top: 1px solid var(--border); }
+.disclaimer h2 { font-size: 1.1rem; margin-bottom: 0.75rem; }
+.disclaimer p { color: var(--muted); font-size: 0.9rem; margin-bottom: 0.5rem; }
+
+/* ── Footer ──────────────────────────────────────────────────────────── */
+footer {
+  border-top: 1px solid var(--border);
+  background: var(--card);
+  padding: 2.5rem 0;
+}
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  align-items: flex-start;
+}
+.footer-content a { color: var(--primary); text-decoration: none; font-weight: 700; }
+.footer-content p { color: var(--muted); font-size: 0.9rem; margin-top: 0.25rem; }
+.footer-content h3 { font-size: 1rem; }
+
+/* ── Toggle buttons ──────────────────────────────────────────────────── */
+.toggle-group {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.toggle-btn {
+  flex: 1;
+  padding: 0.45rem 0.6rem;
+  background: var(--bg);
+  color: var(--muted);
+  border: none;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  line-height: 1.4;
+  transition: background .15s, color .15s;
+}
+.toggle-btn + .toggle-btn { border-left: 1px solid var(--border); }
+.toggle-btn.active { background: var(--primary); color: #fff; }
+
+/* ── Responsive ──────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .footer-content { flex-direction: column; }
+}
+@media (max-width: 700px) {
+  .nav { flex-direction: column; gap: 1rem; padding: 1rem 0; }
+  nav { flex-wrap: wrap; justify-content: center; }
+  .dep-grid { grid-template-columns: 1fr; }
+  .chart-legend { gap: 0.75rem; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container nav">
+    <a href="../" class="logo">Practical Money Tools</a>
+    <nav>
+      <a href="../">← All Tools</a>
+      <button id="themeToggle" class="theme-toggle">🌙</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <section class="tool-hero">
+    <div class="container">
+      <div class="eyebrow">CAR UPGRADE CALCULATOR</div>
+      <h1>True Cost of Upgrading Your Car</h1>
+      <p>See what upgrading really costs — depreciation, running cost differences, and what that money could grow to if invested instead.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+
+      <!-- ── Inputs ───────────────────────────────────────────────── -->
+      <div class="input-grid">
+
+        <!-- Card 1: Cars -->
+        <div class="input-card">
+          <h3>Your Cars</h3>
+
+          <!-- Hidden state inputs (persisted to localStorage) -->
+          <input type="hidden" id="saleMode" value="private">
+          <input type="hidden" id="paymentMode" value="cash">
+
+          <div class="form-group">
+            <label>Current car market value</label>
+            <div class="input-wrap has-left">
+              <span class="sym sym-left">$</span>
+              <input type="number" id="currentValue" min="0" step="500" value="20000">
+            </div>
+          </div>
+
+          <!-- Sale mode toggle -->
+          <div class="form-group">
+            <label>Selling via</label>
+            <div class="toggle-group">
+              <button class="toggle-btn active" id="btn-private">Private sale</button>
+              <button class="toggle-btn" id="btn-tradein">Trade-in</button>
+            </div>
+          </div>
+
+          <!-- Trade-in fields -->
+          <div id="tradein-fields" style="display:none">
+            <div class="form-group">
+              <label>Trade-in discount</label>
+              <div class="input-wrap has-left">
+                <span class="sym sym-left">$</span>
+                <input type="number" id="tradeInDiscount" min="0" step="100" value="1500">
+              </div>
+              <div class="hint">Trade-ins typically return $1,000–$3,000 less than private sale</div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Target car purchase price</label>
+            <div class="input-wrap has-left">
+              <span class="sym sym-left">$</span>
+              <input type="number" id="targetPrice" min="0" step="500" value="35000">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>
+              Out-of-pocket upgrade cost
+              <span class="auto-badge">auto</span>
+            </label>
+            <div class="input-wrap has-left">
+              <span class="sym sym-left">$</span>
+              <input type="number" id="upgradeCost" min="0" step="500" value="15000">
+            </div>
+            <div class="hint" id="upgradeCostHint">Auto-calculated from values above. Edit to override.</div>
+          </div>
+
+          <!-- Payment mode toggle -->
+          <div class="form-group">
+            <label>Paying</label>
+            <div class="toggle-group">
+              <button class="toggle-btn active" id="btn-cash">Cash</button>
+              <button class="toggle-btn" id="btn-finance">Finance</button>
+            </div>
+          </div>
+
+          <!-- Finance fields -->
+          <div id="finance-fields" style="display:none">
+            <div class="form-group">
+              <label>Loan amount</label>
+              <div class="input-wrap has-left">
+                <span class="sym sym-left">$</span>
+                <input type="number" id="loanAmount" min="0" step="500" value="15000">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Interest rate</label>
+              <div class="input-wrap has-right">
+                <input type="number" id="loanRate" min="0" max="50" step="0.5" value="12.5">
+                <span class="sym sym-right">% p.a.</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Loan term</label>
+              <div class="input-wrap has-right">
+                <input type="number" id="loanTerm" min="1" max="10" step="1" value="5">
+                <span class="sym sym-right">yr</span>
+              </div>
+            </div>
+          </div>
+
+          <div id="valuePreview" class="value-preview">
+            After <strong id="pvYears">5</strong> years &mdash;
+            Current car: <strong id="pvCurrent">—</strong> &nbsp;
+            Target car: <strong id="pvTarget">—</strong>
+          </div>
+        </div>
+
+        <!-- Card 2: Running costs -->
+        <div class="input-card">
+          <h3>Annual Running Costs</h3>
+
+          <div class="form-group">
+            <label>Insurance — current car <span class="label-note">(estimate)</span></label>
+            <div class="input-wrap has-left">
+              <span class="sym sym-left">$</span>
+              <input type="number" id="currentInsurance" min="0" step="50" value="1200">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Insurance — target car <span class="label-note">(estimate)</span></label>
+            <div class="input-wrap has-left">
+              <span class="sym sym-left">$</span>
+              <input type="number" id="targetInsurance" min="0" step="50" value="1800">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Annual fuel cost difference</label>
+            <div class="input-wrap has-right">
+              <input type="number" id="fuelDiff" step="50" value="0">
+              <span class="sym sym-right">$/yr</span>
+            </div>
+            <div class="hint">Positive = target costs more. Negative = target saves money (e.g. more efficient engine).</div>
+          </div>
+
+          <div class="form-group">
+            <label>WOF + registration — current car <span class="label-note">(NZ estimate)</span></label>
+            <div class="input-wrap has-left">
+              <span class="sym sym-left">$</span>
+              <input type="number" id="currentWof" min="0" step="10" value="200">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>WOF + registration — target car <span class="label-note">(NZ estimate)</span></label>
+            <div class="input-wrap has-left">
+              <span class="sym sym-left">$</span>
+              <input type="number" id="targetWof" min="0" step="10" value="200">
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Assumptions -->
+        <div class="input-card">
+          <h3>Assumptions</h3>
+
+          <div class="form-group">
+            <label>Ownership period</label>
+            <div class="range-row">
+              <input type="range" id="years" min="1" max="15" step="1" value="5">
+              <div class="range-val"><span id="yearsVal">5</span> yr</div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Expected investment return</label>
+            <div class="input-wrap has-right">
+              <input type="number" id="returnRate" min="0" max="30" step="0.5" value="8">
+              <span class="sym sym-right">% p.a.</span>
+            </div>
+            <div class="hint">Assumed annual return if the upgrade cost were invested instead.</div>
+          </div>
+
+          <details>
+            <summary>Depreciation rates (NZ typical defaults)</summary>
+            <div class="dep-grid">
+              <div class="form-group">
+                <label>Year 1</label>
+                <div class="input-wrap has-right">
+                  <input type="number" id="dep1" min="0" max="100" step="1" value="20">
+                  <span class="sym sym-right">%</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Years 2–3</label>
+                <div class="input-wrap has-right">
+                  <input type="number" id="dep2" min="0" max="100" step="1" value="12">
+                  <span class="sym sym-right">%</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Years 4–5</label>
+                <div class="input-wrap has-right">
+                  <input type="number" id="dep3" min="0" max="100" step="1" value="8">
+                  <span class="sym sym-right">%</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Years 6+</label>
+                <div class="input-wrap has-right">
+                  <input type="number" id="dep4" min="0" max="100" step="1" value="5">
+                  <span class="sym sym-right">%</span>
+                </div>
+              </div>
+            </div>
+          </details>
+        </div>
+
+      </div><!-- /input-grid -->
+
+      <!-- ── Results ──────────────────────────────────────────────── -->
+      <h2 class="results-heading">Results</h2>
+
+      <div class="results-grid">
+
+        <div class="result-card">
+          <div class="result-label">Net depreciation cost</div>
+          <div class="result-value" id="r-dep">—</div>
+          <div class="result-sub" id="r-dep-sub"></div>
+        </div>
+
+        <div class="result-card">
+          <div class="result-label">Running cost difference</div>
+          <div class="result-value" id="r-run">—</div>
+          <div class="result-sub" id="r-run-sub"></div>
+        </div>
+
+        <div class="result-card" id="r-finance-card" style="display:none">
+          <div class="result-label">Financing cost</div>
+          <div class="result-value bad" id="r-finance">—</div>
+          <div class="result-sub" id="r-finance-sub"></div>
+        </div>
+
+        <div class="result-card">
+          <div class="result-label">Foregone investment growth</div>
+          <div class="result-value" id="r-opp">—</div>
+          <div class="result-sub" id="r-opp-sub"></div>
+        </div>
+
+        <div class="result-card accent">
+          <div class="result-label">Total true cost of upgrading</div>
+          <div class="result-value" id="r-total">—</div>
+          <div class="result-sub" id="r-total-sub"></div>
+        </div>
+
+        <div class="result-card" id="r-be-card">
+          <div class="result-label">Break-even</div>
+          <div class="result-value" id="r-be">—</div>
+          <div class="result-sub" id="r-be-sub"></div>
+        </div>
+
+      </div>
+
+      <!-- ── Chart ─────────────────────────────────────────────────── -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Upgrade cost vs. invested alternative</div>
+          <div class="chart-legend">
+            <span><span class="legend-dot" style="background:#0f766e"></span>Invested alternative</span>
+            <span><span class="legend-dot" style="background:#f59e0b"></span>Net upgrade cost</span>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="upgradeChart"></canvas>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="section alt disclaimer">
+    <div class="container narrow">
+      <h2>Disclaimer</h2>
+      <p>For educational purposes only. Not financial advice.</p>
+      <p>Depreciation rates, insurance figures, fuel costs, and investment returns are user-provided estimates and will vary. Projections do not account for inflation, tax, or changes in market conditions. Always seek independent financial advice before making significant financial decisions.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="container footer-content">
+    <div>
+      <h3><a href="../">Practical Money Tools</a></h3>
+      <p>Simple Tools for Smarter Money Decisions</p>
+    </div>
+    <div>
+      <p>Contact</p>
+      <p>inspiroanalytics@gmail.com</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+'use strict';
+
+// ── Storage ───────────────────────────────────────────────────────────────
+const SK = 'car-upgrade-calc-v1';
+const FIELD_IDS = ['currentValue','targetPrice','upgradeCost','currentInsurance',
+                   'targetInsurance','fuelDiff','currentWof','targetWof',
+                   'years','returnRate','dep1','dep2','dep3','dep4',
+                   'paymentMode','loanAmount','loanRate','loanTerm',
+                   'saleMode','tradeInDiscount'];
+
+function saveState() {
+  const s = {};
+  for (const id of FIELD_IDS) {
+    const el = document.getElementById(id);
+    if (el) s[id] = el.value;
+  }
+  try { localStorage.setItem(SK, JSON.stringify(s)); } catch(e) {}
+}
+
+function loadState() {
+  try {
+    const s = JSON.parse(localStorage.getItem(SK));
+    if (!s) return;
+    for (const id of FIELD_IDS) {
+      if (s[id] !== undefined) {
+        const el = document.getElementById(id);
+        if (el) el.value = s[id];
+      }
+    }
+  } catch(e) {}
+}
+
+// ── Theme toggle ──────────────────────────────────────────────────────────
+const themeBtn = document.getElementById('themeToggle');
+function updateThemeIcon() {
+  themeBtn.textContent = document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
+}
+themeBtn.addEventListener('click', () => {
+  document.documentElement.classList.toggle('dark');
+  const dark = document.documentElement.classList.contains('dark');
+  localStorage.setItem('pmt-theme', dark ? 'dark' : 'light');
+  updateThemeIcon();
+  renderChart();
+});
+updateThemeIcon();
+
+// ── Depreciation ──────────────────────────────────────────────────────────
+function projectValue(price, years, rates) {
+  let v = price;
+  for (let y = 1; y <= years; y++) {
+    let r;
+    if      (y === 1) r = rates[0] / 100;
+    else if (y <= 3)  r = rates[1] / 100;
+    else if (y <= 5)  r = rates[2] / 100;
+    else              r = rates[3] / 100;
+    v *= (1 - r);
+  }
+  return Math.max(0, v);
+}
+
+// ── Formatting ────────────────────────────────────────────────────────────
+function fmt(n) {
+  return '$' + Math.round(Math.abs(n)).toLocaleString('en-NZ');
+}
+function fmtSigned(n) {
+  const abs = Math.round(Math.abs(n)).toLocaleString('en-NZ');
+  return (n < 0 ? '−$' : '$') + abs;
+}
+
+// ── Auto-calc upgrade cost ────────────────────────────────────────────────
+let manualUpgrade = false;
+
+function syncUpgradeCost() {
+  if (manualUpgrade) return;
+  const rawCur     = parseFloat(document.getElementById('currentValue').value) || 0;
+  const saleMode   = document.getElementById('saleMode').value;
+  const tradeIn    = saleMode === 'tradein'
+    ? (parseFloat(document.getElementById('tradeInDiscount').value) || 0) : 0;
+  const effectiveCur = Math.max(0, rawCur - tradeIn);
+  const target = parseFloat(document.getElementById('targetPrice').value) || 0;
+  document.getElementById('upgradeCost').value = Math.max(0, target - effectiveCur);
+}
+
+// ── Read all inputs ───────────────────────────────────────────────────────
+function readInputs() {
+  const n = id => parseFloat(document.getElementById(id).value) || 0;
+  const saleMode       = document.getElementById('saleMode').value;
+  const tradeInDiscount = n('tradeInDiscount');
+  const rawCurrentValue = n('currentValue');
+  const effectiveCurrentValue = saleMode === 'tradein'
+    ? Math.max(0, rawCurrentValue - tradeInDiscount) : rawCurrentValue;
+  return {
+    rawCurrentValue,
+    currentValue:     effectiveCurrentValue,  // used throughout for depreciation/cost calc
+    targetPrice:      n('targetPrice'),
+    upgradeCost:      n('upgradeCost'),
+    currentInsurance: n('currentInsurance'),
+    targetInsurance:  n('targetInsurance'),
+    fuelDiff:         n('fuelDiff'),
+    currentWof:       n('currentWof'),
+    targetWof:        n('targetWof'),
+    years:            Math.round(n('years')) || 5,
+    returnRate:       n('returnRate') / 100,
+    rates:            [n('dep1'), n('dep2'), n('dep3'), n('dep4')],
+    paymentMode:      document.getElementById('paymentMode').value,
+    loanAmount:       n('loanAmount'),
+    loanRate:         n('loanRate') / 100,
+    loanTerm:         Math.round(n('loanTerm')) || 5,
+    saleMode,
+    tradeInDiscount,
+  };
+}
+
+// ── Amortisation helper (shared by calculate + renderChart) ───────────────
+function calcAmortisation(loanAmount, loanRate, loanTerm) {
+  if (loanAmount <= 0) return { monthlyPayment: 0, totalInterest: 0 };
+  const monthlyRate = loanRate / 12;
+  const n = Math.max(1, loanTerm) * 12;
+  let monthlyPayment;
+  if (monthlyRate === 0) {
+    monthlyPayment = loanAmount / n;
+  } else {
+    monthlyPayment = loanAmount * monthlyRate / (1 - Math.pow(1 + monthlyRate, -n));
+  }
+  return { monthlyPayment, totalInterest: Math.max(0, monthlyPayment * n - loanAmount) };
+}
+
+// ── Chart instance ────────────────────────────────────────────────────────
+let chartInst = null;
+
+// ── Main calculate + render ───────────────────────────────────────────────
+function calculate() {
+  const {
+    currentValue, targetPrice, upgradeCost,
+    currentInsurance, targetInsurance, fuelDiff,
+    currentWof, targetWof,
+    years, returnRate, rates,
+    paymentMode, loanAmount, loanRate, loanTerm,
+    saleMode, tradeInDiscount,
+  } = readInputs();
+
+  // Update trade-in note on upgrade cost hint
+  const hintEl = document.getElementById('upgradeCostHint');
+  if (saleMode === 'tradein' && tradeInDiscount > 0) {
+    hintEl.textContent = `Auto-calculated with trade-in discount of ${fmt(tradeInDiscount)} applied. Edit to override.`;
+  } else {
+    hintEl.textContent = 'Auto-calculated from values above. Edit to override.';
+  }
+
+  document.getElementById('yearsVal').textContent = years;
+
+  // Projected end values (currentValue is already the effective trade-in-adjusted value)
+  const targetEnd  = projectValue(targetPrice,  years, rates);
+  const currentEnd = projectValue(currentValue, years, rates);
+
+  // Preview strip
+  document.getElementById('pvYears').textContent   = years;
+  document.getElementById('pvCurrent').textContent = fmt(currentEnd);
+  document.getElementById('pvTarget').textContent  = fmt(targetEnd);
+
+  // Net depreciation cost
+  const targetDep  = targetPrice  - targetEnd;
+  const currentDep = currentValue - currentEnd;
+  const netDep     = targetDep - currentDep;
+
+  // Running cost difference — insurance + fuel + WOF (positive = target costs more per year)
+  const annualDiff = (targetInsurance - currentInsurance) + fuelDiff + (targetWof - currentWof);
+  const totalRun   = annualDiff * years;
+
+  // Foregone investment growth (earnings only, not principal)
+  const multiplier = Math.pow(1 + returnRate, years);
+  const oppCost    = upgradeCost * (multiplier - 1);
+
+  // Financing cost via shared amortisation helper
+  let monthlyPayment = 0;
+  let totalInterest = 0;
+  if (paymentMode === 'finance') {
+    ({ monthlyPayment, totalInterest } = calcAmortisation(loanAmount, loanRate, loanTerm));
+  }
+
+  // Total true cost
+  const financingComponent = paymentMode === 'finance' ? totalInterest : 0;
+  const totalTrueCost = netDep + totalRun + oppCost + financingComponent;
+
+  // ── Result card 1: Net depreciation ──
+  const rdEl = document.getElementById('r-dep');
+  rdEl.textContent = fmt(netDep);
+  rdEl.className   = 'result-value ' + (netDep > 500 ? 'bad' : netDep < -500 ? 'good' : 'neutral');
+  document.getElementById('r-dep-sub').textContent =
+    `Target loses ${fmt(targetDep)}, current loses ${fmt(currentDep)} over ${years} yr`;
+
+  // ── Result card 2: Running costs ──
+  const rrEl = document.getElementById('r-run');
+  rrEl.textContent = fmtSigned(totalRun);
+  rrEl.className   = 'result-value ' + (totalRun > 500 ? 'bad' : totalRun < -500 ? 'good' : 'neutral');
+  const perYrNote = annualDiff === 0 ? 'No running cost difference'
+    : (annualDiff > 0 ? fmt(annualDiff) + '/yr more' : fmt(annualDiff) + '/yr less');
+  document.getElementById('r-run-sub').textContent = perYrNote + ` over ${years} yr`;
+
+  // ── Result card 3: Financing cost (shown only in finance mode) ──
+  const finCard = document.getElementById('r-finance-card');
+  if (paymentMode === 'finance') {
+    finCard.style.display = '';
+    document.getElementById('r-finance').textContent = fmt(totalInterest);
+    const loanRateDisplay = Math.round(loanRate * 1000) / 10;  // e.g. 0.125 → 12.5
+    document.getElementById('r-finance-sub').textContent =
+      `${fmt(loanAmount)} at ${loanRateDisplay}% over ${loanTerm} yr — ${fmt(monthlyPayment)}/month`;
+  } else {
+    finCard.style.display = 'none';
+  }
+
+  // ── Result card 4: Foregone investment growth ──
+  document.getElementById('r-opp').textContent = fmt(oppCost);
+  document.getElementById('r-opp').className   = 'result-value bad';
+  const invRateDisplay = Math.round(returnRate * 1000) / 10;
+  document.getElementById('r-opp-sub').textContent =
+    `${fmt(upgradeCost)} invested at ${invRateDisplay}% p.a. would have earned ${fmt(oppCost)} over ${years} yr`;
+
+  // ── Result card 5: Total true cost ──
+  const rtEl = document.getElementById('r-total');
+  rtEl.textContent = fmtSigned(totalTrueCost);
+  rtEl.className   = 'result-value ' + (totalTrueCost > 1000 ? 'bad' : totalTrueCost < -1000 ? 'good' : 'neutral');
+  document.getElementById('r-total-sub').textContent = paymentMode === 'finance'
+    ? 'Depreciation + running costs + financing + foregone growth'
+    : 'Depreciation + running costs + foregone growth';
+
+  // ── Result card 6: Break-even ──
+  const beEl    = document.getElementById('r-be');
+  const beSubEl = document.getElementById('r-be-sub');
+  const annualSavings = -annualDiff;  // positive = target saves money
+
+  if (annualSavings <= 0) {
+    beEl.textContent = 'N/A';
+    beEl.className   = 'result-value neutral';
+    beSubEl.textContent = 'Target car doesn\'t save on running costs';
+  } else {
+    // Find when: upgradeCost + depDiff(y) + runDiff(y) <= 0
+    // i.e. when running cost savings offset upgrade cost + extra depreciation
+    let beYear = null;
+    for (let y = 1; y <= 50; y++) {
+      const tv = projectValue(targetPrice,  y, rates);
+      const cv = projectValue(currentValue, y, rates);
+      const depDiff = (targetPrice - tv) - (currentValue - cv);
+      const runDiff = annualDiff * y;
+      if (upgradeCost + depDiff + runDiff <= 0) {
+        beYear = y;
+        break;
+      }
+    }
+    if (beYear === null) {
+      beEl.textContent = '> 50 yr';
+      beEl.className   = 'result-value neutral';
+      beSubEl.textContent = 'Savings don\'t offset upgrade cost within 50 years';
+    } else {
+      beEl.textContent = beYear + (beYear === 1 ? ' year' : ' years');
+      beEl.className   = 'result-value ' + (beYear <= years ? 'good' : 'neutral');
+      beSubEl.textContent = beYear <= years
+        ? 'Within your ownership period ✓'
+        : 'Beyond your ownership period';
+    }
+  }
+
+  renderChart();
+  saveState();
+}
+
+// ── Chart ─────────────────────────────────────────────────────────────────
+function renderChart() {
+  const {
+    currentValue, targetPrice, upgradeCost,
+    currentInsurance, targetInsurance, fuelDiff,
+    currentWof, targetWof,
+    years, returnRate, rates,
+    paymentMode, loanAmount, loanRate, loanTerm,
+  } = readInputs();
+
+  const annualDiff = (targetInsurance - currentInsurance) + fuelDiff + (targetWof - currentWof);
+
+  // Financing component for chart (same formula as calculate via shared helper)
+  const { totalInterest: chartTotalInterest } = paymentMode === 'finance'
+    ? calcAmortisation(loanAmount, loanRate, loanTerm)
+    : { totalInterest: 0 };
+  const isDark = document.documentElement.classList.contains('dark');
+  const gridColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)';
+  const tickColor = isDark ? '#94a3b8' : '#9ca3af';
+  const TEAL  = '#0f766e';
+  const AMBER = '#f59e0b';
+
+  // Build data arrays
+  const investPts = [];
+  const costPts   = [];
+
+  for (let y = 0; y <= years; y++) {
+    investPts.push({ x: y, y: Math.round(upgradeCost * Math.pow(1 + returnRate, y)) });
+
+    const tv = projectValue(targetPrice,  y, rates);
+    const cv = projectValue(currentValue, y, rates);
+    const depDiff = (targetPrice - tv) - (currentValue - cv);
+    const runDiff = annualDiff * y;
+    const financingAtY = paymentMode === 'finance'
+      ? (y <= loanTerm ? chartTotalInterest * (y / loanTerm) : chartTotalInterest)
+      : 0;
+    costPts.push({ x: y, y: Math.round(upgradeCost + depDiff + runDiff + financingAtY) });
+  }
+
+  // Find crossover after year 0
+  let crossX = null, crossY = null;
+  for (let i = 1; i < costPts.length; i++) {
+    const pC = costPts[i-1].y,   cC = costPts[i].y;
+    const pI = investPts[i-1].y, cI = investPts[i].y;
+    // Both start equal at y=0, so only detect crossing after that
+    if (i > 0 && ((pC >= pI && cC < cI) || (pC <= pI && cC > cI))) {
+      const denom = (cC - pC) - (cI - pI);
+      if (Math.abs(denom) > 0.001) {
+        const t = (pI - pC) / denom;
+        crossX = (i - 1) + t;
+        crossY = pC + t * (cC - pC);
+      }
+      break;
+    }
+  }
+
+  // Custom plugin to draw crossover annotation
+  const crossoverPlugin = {
+    id: 'crossoverAnnotation',
+    afterDraw(chart) {
+      if (crossX === null) return;
+      const ctx = chart.ctx;
+      const xScale = chart.scales.x;
+      const yScale = chart.scales.y;
+      const px = xScale.getPixelForValue(crossX);
+      const py = yScale.getPixelForValue(crossY);
+
+      ctx.save();
+
+      // Vertical dashed line
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.18)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(px, yScale.top);
+      ctx.lineTo(px, yScale.bottom);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Circle at crossing point
+      ctx.beginPath();
+      ctx.arc(px, py, 5, 0, Math.PI * 2);
+      ctx.fillStyle = isDark ? '#1e293b' : '#fff';
+      ctx.fill();
+      ctx.strokeStyle = '#6366f1';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Label
+      ctx.font = '600 11px Inter, system-ui, sans-serif';
+      ctx.fillStyle = isDark ? '#e2e8f0' : '#374151';
+      const label = `Crossover ~yr ${crossX.toFixed(1)}`;
+      const lw = ctx.measureText(label).width;
+      const lx = Math.min(px + 9, chart.width - lw - 10);
+      const ly = Math.max(py - 10, 20);
+      ctx.fillText(label, lx, ly);
+
+      ctx.restore();
+    }
+  };
+
+  if (chartInst) { chartInst.destroy(); chartInst = null; }
+
+  chartInst = new Chart(document.getElementById('upgradeChart'), {
+    type: 'line',
+    plugins: [crossoverPlugin],
+    data: {
+      datasets: [
+        {
+          label: 'Invested alternative',
+          data: investPts,
+          borderColor: TEAL,
+          backgroundColor: TEAL + '18',
+          borderWidth: 2.5,
+          tension: 0.35,
+          fill: false,
+          pointRadius: 3,
+          pointHoverRadius: 6,
+        },
+        {
+          label: 'Net upgrade cost',
+          data: costPts,
+          borderColor: AMBER,
+          backgroundColor: AMBER + '18',
+          borderWidth: 2.5,
+          tension: 0.35,
+          fill: false,
+          pointRadius: 3,
+          pointHoverRadius: 6,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: isDark ? '#1e293b' : '#fff',
+          titleColor: isDark ? '#f8fafc' : '#111827',
+          bodyColor: isDark ? '#cbd5e1' : '#6b7280',
+          borderColor: isDark ? '#334155' : '#e5e7eb',
+          borderWidth: 1,
+          padding: 10,
+          callbacks: {
+            title(items) { return 'Year ' + items[0].parsed.x; },
+            label(ctx) {
+              return ' ' + ctx.dataset.label + ': $' + Math.round(ctx.parsed.y).toLocaleString('en-NZ');
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          type: 'linear',
+          min: 0,
+          max: years,
+          grid: { color: gridColor },
+          ticks: {
+            color: tickColor,
+            font: { size: 11 },
+            stepSize: 1,
+            callback(v) { return 'Yr ' + v; },
+          }
+        },
+        y: {
+          grid: { color: gridColor },
+          ticks: {
+            color: tickColor,
+            font: { size: 11 },
+            callback(v) {
+              if (Math.abs(v) >= 1000) return '$' + (v / 1000).toFixed(0) + 'k';
+              return '$' + v;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+// ── Wire up inputs ────────────────────────────────────────────────────────
+document.getElementById('currentValue').addEventListener('input', () => {
+  manualUpgrade = false;
+  syncUpgradeCost();
+  calculate();
+});
+
+document.getElementById('targetPrice').addEventListener('input', () => {
+  manualUpgrade = false;
+  syncUpgradeCost();
+  calculate();
+});
+
+document.getElementById('upgradeCost').addEventListener('input', () => {
+  manualUpgrade = true;
+  calculate();
+});
+
+document.getElementById('tradeInDiscount').addEventListener('input', () => {
+  manualUpgrade = false;
+  syncUpgradeCost();
+  calculate();
+});
+
+const autoCalcIds = ['currentInsurance','targetInsurance','fuelDiff','currentWof','targetWof',
+                     'years','returnRate','dep1','dep2','dep3','dep4',
+                     'loanAmount','loanRate','loanTerm'];
+for (const id of autoCalcIds) {
+  document.getElementById(id).addEventListener('input', calculate);
+}
+
+// ── Sale mode toggle ──────────────────────────────────────────────────────
+document.getElementById('btn-private').addEventListener('click', () => {
+  document.getElementById('saleMode').value = 'private';
+  document.getElementById('btn-private').classList.add('active');
+  document.getElementById('btn-tradein').classList.remove('active');
+  document.getElementById('tradein-fields').style.display = 'none';
+  manualUpgrade = false;
+  syncUpgradeCost();
+  calculate();
+});
+
+document.getElementById('btn-tradein').addEventListener('click', () => {
+  document.getElementById('saleMode').value = 'tradein';
+  document.getElementById('btn-tradein').classList.add('active');
+  document.getElementById('btn-private').classList.remove('active');
+  document.getElementById('tradein-fields').style.display = '';
+  manualUpgrade = false;
+  syncUpgradeCost();
+  calculate();
+});
+
+// ── Payment mode toggle ───────────────────────────────────────────────────
+document.getElementById('btn-cash').addEventListener('click', () => {
+  document.getElementById('paymentMode').value = 'cash';
+  document.getElementById('btn-cash').classList.add('active');
+  document.getElementById('btn-finance').classList.remove('active');
+  document.getElementById('finance-fields').style.display = 'none';
+  calculate();
+});
+
+document.getElementById('btn-finance').addEventListener('click', () => {
+  document.getElementById('paymentMode').value = 'finance';
+  document.getElementById('btn-finance').classList.add('active');
+  document.getElementById('btn-cash').classList.remove('active');
+  document.getElementById('finance-fields').style.display = '';
+  // Seed loan amount from current upgrade cost on first switch to finance
+  document.getElementById('loanAmount').value =
+    document.getElementById('upgradeCost').value;
+  calculate();
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────
+loadState();
+
+// Restore toggle visual states from persisted hidden inputs
+(function() {
+  const saleMode    = document.getElementById('saleMode').value;
+  const paymentMode = document.getElementById('paymentMode').value;
+
+  if (saleMode === 'tradein') {
+    document.getElementById('btn-tradein').classList.add('active');
+    document.getElementById('btn-private').classList.remove('active');
+    document.getElementById('tradein-fields').style.display = '';
+  }
+  if (paymentMode === 'finance') {
+    document.getElementById('btn-finance').classList.add('active');
+    document.getElementById('btn-cash').classList.remove('active');
+    document.getElementById('finance-fields').style.display = '';
+  }
+})();
+
+// Check if stored upgrade cost matches auto-calc (account for trade-in)
+(function() {
+  const rawCur  = parseFloat(document.getElementById('currentValue').value) || 0;
+  const saleMode = document.getElementById('saleMode').value;
+  const tradeIn  = saleMode === 'tradein'
+    ? (parseFloat(document.getElementById('tradeInDiscount').value) || 0) : 0;
+  const effectiveCur = Math.max(0, rawCur - tradeIn);
+  const target  = parseFloat(document.getElementById('targetPrice').value)  || 0;
+  const stored  = parseFloat(document.getElementById('upgradeCost').value)  || 0;
+  const auto    = Math.max(0, target - effectiveCur);
+  manualUpgrade = Math.abs(stored - auto) > 1;
+  if (!manualUpgrade) syncUpgradeCost();
+})();
+
+calculate();
+</script>
+
+</body>
+</html>

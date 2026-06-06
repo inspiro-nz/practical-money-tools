@@ -168,6 +168,7 @@ async function fetchAlphaVantage(apiKey) {
   const ytdStart = dates.filter(d => d.startsWith(thisYear)).pop() || dates[dates.length-1];
   return {
     price,
+    series,
     changeToday: dates.length > 1  ? ((price - gc(dates[1])) / gc(dates[1])) * 100 : null,
     change1W:    dates.length > 5  ? ((price - gc(dates[Math.min(5,  dates.length-1)])) / gc(dates[Math.min(5,  dates.length-1)])) * 100 : null,
     change1M:    dates.length > 22 ? ((price - gc(dates[Math.min(22, dates.length-1)])) / gc(dates[Math.min(22, dates.length-1)])) * 100 : null,
@@ -175,6 +176,33 @@ async function fetchAlphaVantage(apiKey) {
     lastUpdated: new Date(dates[0]).toLocaleDateString("en-NZ", {day:"numeric", month:"short", year:"numeric"}),
     source: "Alpha Vantage (SPY)"
   };
+}
+
+// ── Historical backfill ───────────────────────────────────────────────────
+function buildBackfill(series, drawdowns, repayments) {
+  const todayDate = today();
+  const active = drawdowns.filter(d => d.date <= todayDate);
+  if (active.length === 0) return { entries: [], baseline: null };
+  const earliestDate = active.reduce((min, d) => d.date < min ? d.date : min, active[0].date);
+  const dates = Object.keys(series).sort((a, b) => a.localeCompare(b));
+  const gc = d => parseFloat(series[d]["4. close"]);
+  const baselineDate = dates.find(d => d >= earliestDate);
+  if (!baselineDate) return { entries: [], baseline: null };
+  const backfillBaseline = gc(baselineDate);
+  const entries = [];
+  for (const date of dates) {
+    if (date < earliestDate || date > todayDate) continue;
+    const spyPrice = gc(date);
+    const totalDrawnAsOf = drawdowns
+      .filter(d => d.date <= date && d.date <= todayDate)
+      .reduce((s, d) => s + d.amount, 0);
+    if (totalDrawnAsOf === 0) continue;
+    const totalRepaidAsOf = repayments
+      .filter(r => r.date <= date)
+      .reduce((s, r) => s + r.amount, 0);
+    entries.push({ date, spyPrice, portfolioValue: totalDrawnAsOf * (spyPrice / backfillBaseline), cumulativePaid: totalRepaidAsOf });
+  }
+  return { entries, baseline: backfillBaseline };
 }
 
 // ── InfoTip ───────────────────────────────────────────────────────────────
@@ -649,13 +677,43 @@ function App() {
     setLoading(true); setError("");
     try {
       const parsed = await fetchAlphaVantage(avKey);
-      const baseline = state.sp500Baseline || parsed.price;
-      parsed.changeFromBaseline = ((parsed.price - baseline) / baseline) * 100;
+      const patch = {};
+      let effectiveBaseline = state.sp500Baseline;
+      let backfillEntries = null;
+
+      if ((state.priceHistory||[]).length < 2 && parsed.series) {
+        const bf = buildBackfill(parsed.series, state.drawdowns||[], state.repayments||[]);
+        if (bf.entries.length > 0) {
+          backfillEntries = bf.entries;
+          if (!state.sp500Baseline && bf.baseline != null) {
+            effectiveBaseline = bf.baseline;
+            patch.sp500Baseline = bf.baseline;
+          }
+        }
+      }
+
+      if (!effectiveBaseline) {
+        effectiveBaseline = parsed.price;
+        patch.sp500Baseline = parsed.price;
+      }
+
+      parsed.changeFromBaseline = ((parsed.price - effectiveBaseline) / effectiveBaseline) * 100;
       setMarket(parsed);
       setLastFetched(new Date().toLocaleTimeString("en-NZ", {hour:"2-digit", minute:"2-digit"}));
-      const patch = {};
-      if (!state.sp500Baseline) patch.sp500Baseline = parsed.price;
-      if (totalDrawn > 0) patch.priceHistory = addSnapshot(parsed.price, baseline, totalRepaid);
+
+      if (totalDrawn > 0) {
+        const todaySnap = addSnapshot(parsed.price, effectiveBaseline, totalRepaid);
+        if (backfillEntries) {
+          const snapDates = new Set(todaySnap.map(h => h.date));
+          patch.priceHistory = [
+            ...todaySnap,
+            ...backfillEntries.filter(e => !snapDates.has(e.date))
+          ].sort((a, b) => a.date.localeCompare(b.date)).slice(-104);
+        } else {
+          patch.priceHistory = todaySnap;
+        }
+      }
+
       upd(patch);
     } catch(e) { setError(e.message); }
     setLoading(false);
@@ -1474,12 +1532,18 @@ function App() {
                   ))}
                 </div>
               </div>
-              <div style={{marginTop:16, paddingTop:16, borderTop:`1px solid ${C.border}`}}>
+              <div style={{marginTop:16, paddingTop:16, borderTop:`1px solid ${C.border}`, display:"flex", gap:10, flexWrap:"wrap"}}>
                 <button onClick={() => {
                   if (window.confirm("Clear all price history snapshots? Drawdowns and repayments are kept."))
                     upd({priceHistory:[]});
                 }} style={btn({background:"none", border:`1px solid ${C.neg}44`, color:C.neg, fontSize:11, padding:"7px 16px"})}>
                   Clear price history
+                </button>
+                <button onClick={() => {
+                  if (window.confirm("Clear price history and re-backfill on the next market refresh?\n\nThis uses the full ~100-day series from Alpha Vantage to rebuild your chart history."))
+                    upd({priceHistory:[]});
+                }} style={btn({fontSize:11, padding:"7px 16px"})}>
+                  ↺ Backfill history
                 </button>
               </div>
             </div>

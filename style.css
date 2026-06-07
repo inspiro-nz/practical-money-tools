@@ -353,6 +353,24 @@ nav a {
     font-weight: 700;
 }
 
+.support-content {
+
+    text-align: center;
+}
+
+.support-qr {
+
+    width: 200px;
+    height: 200px;
+
+    margin: 1.5rem auto;
+
+    border: 1px solid var(--border);
+    border-radius: 18px;
+
+    box-shadow: var(--shadow);
+}
+
 .disclaimer {
 
     border-top: 1px solid var(--border);

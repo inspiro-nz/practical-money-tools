@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://inspiro-nz.github.io/practical-money-tools/sitemap.xml

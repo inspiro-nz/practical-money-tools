@@ -1,136 +1,93 @@
 # Practical Money Tools
 
-Simple Tools for Smarter Money Decisions.
+**Simple Tools for Smarter Money Decisions**
 
-Practical Money Tools is a collection of free personal finance calculators and planning tools designed to help people make better long-term financial decisions.
+Free, browser-based personal finance calculators designed to help people make better long-term financial decisions. No accounts. No sign-up. All calculations run locally — your data never leaves your device.
 
-The goal is simple:
-
-- Make financial concepts easier to understand
-- Provide practical calculators without unnecessary complexity
-- Help users evaluate trade-offs and track progress
-- Keep tools free and accessible
+🔗 **Live site:** https://inspiro-nz.github.io/practical-money-tools/
 
 ---
 
-## Live Website
+## Why This Exists
 
-https://YOUR-GITHUB-PAGES-URL
+Most personal finance apps want your data, your email, and a monthly subscription. These tools don't. They run entirely in the browser using localStorage — open the page, use the tool, close it. Nothing is stored anywhere except your own device.
 
 ---
 
 ## Available Tools
 
-### Self Loan Tracker
+### [Self-Loan Tracker](https://inspiro-nz.github.io/practical-money-tools/self-loan-tracker/)
 
-Track loan balances, repayments, and progress toward becoming debt free.
+**The problem:** You invest in an index fund and at some point need to access the money. Selling feels wrong — not just emotionally, but mathematically. Every dollar you pull out isn't just that dollar; it's everything that dollar would have become.
 
-Features:
+**The concept:** What if you treated the withdrawal as a loan to yourself? Calculate a monthly repayment at the expected market return rate, follow it, and end up in exactly the same position you'd have been in if you'd never withdrawn. The opportunity cost cancels out.
 
-- Monitor remaining loan balances
-- Visualise repayment progress
-- Track debt reduction over time
-- Simple and privacy-friendly interface
+**What the tool does:**
+- Calculates the break-even monthly repayment for your withdrawal
+- Pulls live index prices via the free Alpha Vantage API (manual entry fallback)
+- Charts two lines over time: what the withdrawn amount would be worth if left invested vs. cumulative repayments
+- Stores all data in `localStorage` — nothing leaves your device
+- Installable as a PWA on mobile
+
+**Tech:** Vanilla JS, React (UMD), HTML/CSS, localStorage, Alpha Vantage free API. No framework build step. No backend.
+
+### [Car Upgrade Cost Calculator](https://inspiro-nz.github.io/practical-money-tools/car-upgrade-calculator/)
+
+**The problem:** Upgrading to a newer or pricier car always feels like it costs "the difference" between the two prices. In reality the true cost includes depreciation, running costs, financing, and the growth you give up on that money if it stayed invested instead.
+
+**The concept:** Enter your current car's value, the target car's price, and how you'd pay for it. The tool models depreciation on both vehicles using a New Zealand-typical curve, layers in running cost differences (insurance, fuel, WOF and registration), financing costs if you borrow, and what the money could have grown to if invested instead — then shows the true all-in cost and a break-even point.
+
+**What the tool does:**
+- Models depreciation on both vehicles using an NZ-typical curve
+- Compares running costs: insurance, fuel, WOF and registration
+- Supports cash or finance purchases, with full loan amortisation
+- Accounts for private sale vs. trade-in when valuing your current car
+- Calculates the foregone investment growth (opportunity cost) of spending rather than investing
+- Charts the true cost over time and a break-even year
+- Stores all data in `localStorage` — nothing leaves your device
+
+**Tech:** Vanilla JS, Chart.js, HTML/CSS, localStorage. No framework build step. No backend.
 
 ---
 
 ## Planned Tools
 
-### Catch-up Contribution Calculator
-
-Estimate the impact of additional retirement contributions and explore different contribution strategies.
-
-### Emergency Fund Rebuild Tracker
-
-Create a plan to rebuild savings after unexpected expenses.
-
-### Mortgage Offset vs Invest
-
-Compare mortgage savings against potential investment returns to better understand long-term trade-offs.
+| Tool | Description |
+|------|-------------|
+| Rent vs Buy Calculator (NZ) | Model the real financial difference between renting and buying — split mortgage tranches, rates, insurance, maintenance, and what your deposit earns if invested instead |
+| KiwiSaver Optimiser | Find your optimal KiwiSaver contribution rate and the point where directing extra money into your own investment account beats locking it in until 65 |
 
 ---
 
 ## Design Principles
 
-Practical Money Tools follows a few simple principles:
+**Simplicity** — Tools should be easy to understand and quick to use.
 
-### Simplicity
+**Privacy** — Calculations are performed locally in the browser. No server. No database. No accounts.
 
-Tools should be easy to understand and quick to use.
+**Accessibility** — Works across desktop and mobile devices. Installable as a PWA.
 
-### Privacy
-
-Where possible, calculations are performed locally in the browser.
-
-### Accessibility
-
-Tools should work well across desktop and mobile devices.
-
-### Transparency
-
-Calculations should be understandable and not rely on hidden assumptions.
-
----
-
-## Technology
-
-Built using:
-
-- HTML
-- CSS
-- JavaScript
-
-No frameworks.
-
-No build process.
-
-No external dependencies.
+**Transparency** — Calculations are understandable and do not rely on hidden assumptions.
 
 ---
 
 ## Running Locally
 
-Clone the repository:
-
 ```bash
-git clone https://github.com/YOUR_USERNAME/practical-money-tools.git
+git clone https://github.com/inspiro-nz/practical-money-tools.git
+cd practical-money-tools
+# Open index.html in your browser — no build step required
 ```
-
-Open:
-
-```text
-index.html
-```
-
-in your browser.
-
----
-
-## Roadmap
-
-Future improvements may include:
-
-- Additional financial calculators
-- Better data visualisation
-- Scenario modelling tools
-- Retirement planning tools
-- Investment comparison tools
 
 ---
 
 ## Disclaimer
 
-The information and calculators provided on this website are for educational and informational purposes only.
-
-Nothing contained within this project should be considered financial, legal, tax, or investment advice.
-
-Always seek professional advice before making financial decisions.
+The information and calculators provided on this website are for educational and informational purposes only. Nothing contained within this project should be considered financial, legal, tax, or investment advice. Always seek professional advice before making financial decisions.
 
 ---
 
 ## Contact
-
-Email:
 
 inspiroanalytics@gmail.com
 

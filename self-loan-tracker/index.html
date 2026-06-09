@@ -126,10 +126,10 @@
 <!-- ── Styles ─────────────────────────────────────────────────────────── -->
 <link rel="stylesheet" href="styles.css">
 
-<!-- ── React (UMD, no build step) ────────────────────────────────────── -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<!-- ── Local JS dependencies ─────────────────────────────────────────── -->
+<script src="react.production.min.js"></script>
+<script src="react-dom.production.min.js"></script>
+<script src="babel.min.js"></script>
 
 <!-- Cloudflare Web Analytics -->
 <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "fe9f0092a9784ddd9af4bed63f1fa253"}'></script>
@@ -1633,7 +1633,7 @@ function App() {
               style={{display:"inline-block", lineHeight:0, opacity:0.55, transition:"opacity 0.15s"}}
               onMouseEnter={e => e.currentTarget.style.opacity=1}
               onMouseLeave={e => e.currentTarget.style.opacity=0.55}>
-              <img src="../bmc_qr.png" alt="Buy me a coffee QR code"
+              <img src="bmc_qr.png" alt="Buy me a coffee QR code"
                 style={{width:44, height:44, borderRadius:4, display:"block"}}/>
             </a>
           </div>

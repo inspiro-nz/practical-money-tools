@@ -14,8 +14,12 @@ const APP_SHELL = [
   "index.html",
   "styles.css",
   "manifest.json",
+  "react.production.min.js",
+  "react-dom.production.min.js",
+  "babel.min.js",
   "icon-192.png",
   "icon-512.png",
+  "bmc_qr.png",
 ];
 
 // These must always hit the network

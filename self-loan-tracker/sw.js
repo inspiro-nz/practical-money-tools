@@ -1,24 +1,25 @@
 /* ============================================================
-   Self-Loan Tracker — Service Worker  (cache: slt-v4)
+   Self-Loan Tracker — Service Worker  (cache: slt-v5)
    Part of Practical Money Tools
    https://inspiro-nz.github.io/practical-money-tools/self-loan-tracker/
 
    Cache-first for app shell. Network-only for external APIs.
    ============================================================ */
 
-const CACHE_NAME = "slt-v4";
+const CACHE_NAME = "slt-v5";
 
 // App shell — all files needed to run offline
 const APP_SHELL = [
   "./",
   "index.html",
   "styles.css",
-  "script.js",
   "manifest.json",
+  "react.production.min.js",
+  "react-dom.production.min.js",
+  "babel.min.js",
   "icon-192.png",
   "icon-512.png",
   "bmc_qr.png",
-  "inspiro-logo.png",
 ];
 
 // These must always hit the network

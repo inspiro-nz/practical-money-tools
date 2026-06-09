@@ -126,10 +126,10 @@
 <!-- ── Styles ─────────────────────────────────────────────────────────── -->
 <link rel="stylesheet" href="styles.css">
 
-<!-- ── React (UMD, no build step) ────────────────────────────────────── -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<!-- ── Local JS dependencies ─────────────────────────────────────────── -->
+<script src="react.production.min.js"></script>
+<script src="react-dom.production.min.js"></script>
+<script src="babel.min.js"></script>
 
 <!-- Cloudflare Web Analytics -->
 <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "fe9f0092a9784ddd9af4bed63f1fa253"}'></script>
@@ -157,8 +157,8 @@
 <!-- ── App ────────────────────────────────────────────────────────────── -->
 <script type="text/babel">
 /* ============================================================
-   Self-Loan Tracker — script.js
-   All logic identical to original. Colours read from CSS
+   Self-Loan Tracker — inline app
+   All logic is contained within this page. Colours read from CSS
    variables so light/dark theme works automatically.
    ============================================================ */
 

@@ -13,12 +13,9 @@ const APP_SHELL = [
   "./",
   "index.html",
   "styles.css",
-  "script.js",
   "manifest.json",
   "icon-192.png",
   "icon-512.png",
-  "bmc_qr.png",
-  "inspiro-logo.png",
 ];
 
 // These must always hit the network

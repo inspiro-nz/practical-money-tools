@@ -157,8 +157,8 @@
 <!-- ── App ────────────────────────────────────────────────────────────── -->
 <script type="text/babel">
 /* ============================================================
-   Self-Loan Tracker — script.js
-   All logic identical to original. Colours read from CSS
+   Self-Loan Tracker — inline app
+   All logic is contained within this page. Colours read from CSS
    variables so light/dark theme works automatically.
    ============================================================ */
 
@@ -1633,7 +1633,7 @@ function App() {
               style={{display:"inline-block", lineHeight:0, opacity:0.55, transition:"opacity 0.15s"}}
               onMouseEnter={e => e.currentTarget.style.opacity=1}
               onMouseLeave={e => e.currentTarget.style.opacity=0.55}>
-              <img src="bmc_qr.png" alt="Buy me a coffee QR code"
+              <img src="../bmc_qr.png" alt="Buy me a coffee QR code"
                 style={{width:44, height:44, borderRadius:4, display:"block"}}/>
             </a>
           </div>

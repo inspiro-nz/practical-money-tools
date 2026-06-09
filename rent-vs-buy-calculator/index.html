@@ -7,10 +7,11 @@
   <link rel="stylesheet" href="styles.css">
   <script src="../self-loan-tracker/react.production.min.js"></script>
   <script src="../self-loan-tracker/react-dom.production.min.js"></script>
-  <script src="../self-loan-tracker/babel.min.js"></script>
+  <!-- Use precompiled bundle to avoid in-browser Babel when opening file:// -->
+  <script src="app.bundle.js"></script>
 </head>
 <body>
   <div id="root"></div>
-  <script type="text/babel" data-presets="react" src="app.jsx"></script>
+  <!-- If you prefer live editing, open this folder via a static server and remove the bundle script above. -->
 </body>
 </html>

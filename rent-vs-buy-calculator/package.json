@@ -1,0 +1,10 @@
+{
+  "name": "rent-vs-buy-calculator",
+  "private": true,
+  "scripts": {
+    "build": "esbuild app.jsx --bundle --minify --format=iife --target=es2018 --outfile=app.bundle.js"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.0"
+  }
+}

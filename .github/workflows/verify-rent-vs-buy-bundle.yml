@@ -5,11 +5,15 @@ on:
     paths:
       - 'rent-vs-buy-calculator/app.jsx'
       - 'rent-vs-buy-calculator/app.bundle.js'
+      - 'rent-vs-buy-calculator/package.json'
+      - 'rent-vs-buy-calculator/package-lock.json'
       - '.github/workflows/verify-rent-vs-buy-bundle.yml'
   pull_request:
     paths:
       - 'rent-vs-buy-calculator/app.jsx'
       - 'rent-vs-buy-calculator/app.bundle.js'
+      - 'rent-vs-buy-calculator/package.json'
+      - 'rent-vs-buy-calculator/package-lock.json'
       - '.github/workflows/verify-rent-vs-buy-bundle.yml'
 
 jobs:
@@ -18,25 +22,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: rent-vs-buy-calculator/package-lock.json
+
+      - name: Install dependencies
+        working-directory: rent-vs-buy-calculator
+        run: npm ci
+
       - name: Rebuild app.bundle.js from app.jsx
         working-directory: rent-vs-buy-calculator
-        run: npx --yes esbuild@0.28.0 app.jsx --bundle --minify --format=iife --target=es2018 --outfile=app.bundle.fresh.js
+        run: ./node_modules/.bin/esbuild app.jsx --bundle --minify --format=iife --target=es2018 --outfile=app.bundle.fresh.js
 
       - name: Compare against committed bundle
         working-directory: rent-vs-buy-calculator
         run: |
           # app.bundle.js has no header comment, so this is a full-file diff.
-          # Normalize line endings and trailing whitespace the same way on both
-          # sides so incidental formatting differences don't fail CI.
-          normalize() {
-            sed -e 's/\r$//' -e 's/[[:space:]]*$//' "$1"
-          }
-
-          normalize app.bundle.js > app.bundle.committed-normalized.js
-          normalize app.bundle.fresh.js > app.bundle.fresh-normalized.js
-
-          if ! diff -u app.bundle.committed-normalized.js app.bundle.fresh-normalized.js; then
-            echo "::error::app.bundle.js is out of date with app.jsx. Regenerate it with: npx esbuild@0.28.0 app.jsx --bundle --minify --format=iife --target=es2018 --outfile=app.bundle.js"
+          # Only normalize CRLF -> LF (checkout-dependent); everything else
+          # must match exactly so real drift can't be masked.
+          if ! diff -u <(tr -d '\r' < app.bundle.js) <(tr -d '\r' < app.bundle.fresh.js); then
+            echo "::error::app.bundle.js is out of date with app.jsx. Regenerate it with: npm run build (in rent-vs-buy-calculator/)"
             exit 1
           fi
           echo "app.bundle.js is up to date with app.jsx"

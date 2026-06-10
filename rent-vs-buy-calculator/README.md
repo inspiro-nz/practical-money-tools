@@ -17,13 +17,15 @@ This browser-only calculator is part of the Practical Money Tools web app. It ru
 - `app.jsx` — React component, state sync, and projection data preparation
 - `nzRentVsBuyEngine.ts` — separate TypeScript engine file for core math
 - `app.bundle.js` — precompiled, minified bundle of `app.jsx` so `index.html` works over `file://` without an in-browser Babel step
+- `vendor/` — local copies of the React/ReactDOM production builds (kept independent of `self-loan-tracker`)
 
 ## Updating the bundle
 
-`app.bundle.js` is generated from `app.jsx`. After changing `app.jsx`, regenerate the bundle with:
+`app.bundle.js` is generated from `app.jsx` using the pinned `esbuild` dependency in `package.json`. After changing `app.jsx`, regenerate the bundle with:
 
 ```sh
-npx esbuild@0.28.0 app.jsx --bundle --minify --format=iife --target=es2018 --outfile=app.bundle.js
+npm ci
+npm run build
 ```
 
-CI (`.github/workflows/verify-rent-vs-buy-bundle.yml`) rebuilds `app.bundle.js` from `app.jsx` and fails if the committed bundle is out of date.
+CI (`.github/workflows/verify-rent-vs-buy-bundle.yml`) installs the pinned dependencies via `npm ci`, rebuilds `app.bundle.js` from `app.jsx` with the local `esbuild` binary, and fails if the committed bundle is out of date.

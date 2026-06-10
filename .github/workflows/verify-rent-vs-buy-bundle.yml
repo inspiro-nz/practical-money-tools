@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'rent-vs-buy-calculator/app.jsx'
+      - 'rent-vs-buy-calculator/nzRentVsBuyEngine.ts'
       - 'rent-vs-buy-calculator/app.bundle.js'
       - 'rent-vs-buy-calculator/package.json'
       - 'rent-vs-buy-calculator/package-lock.json'
@@ -11,6 +12,7 @@ on:
   pull_request:
     paths:
       - 'rent-vs-buy-calculator/app.jsx'
+      - 'rent-vs-buy-calculator/nzRentVsBuyEngine.ts'
       - 'rent-vs-buy-calculator/app.bundle.js'
       - 'rent-vs-buy-calculator/package.json'
       - 'rent-vs-buy-calculator/package-lock.json'

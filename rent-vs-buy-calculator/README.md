@@ -14,14 +14,14 @@ This browser-only calculator is part of the Practical Money Tools web app. It ru
 
 - `index.html` — app shell and React entry point
 - `styles.css` — calculator styles
-- `app.jsx` — React component, state sync, and projection data preparation
-- `nzRentVsBuyEngine.ts` — separate TypeScript engine file for core math
-- `app.bundle.js` — precompiled, minified bundle of `app.jsx` so `index.html` works over `file://` without an in-browser Babel step
+- `app.jsx` — React component, state sync, and UI
+- `nzRentVsBuyEngine.ts` — single source of truth for projection math, validation, and sanitization, imported by `app.jsx`
+- `app.bundle.js` — precompiled, minified bundle of `app.jsx` (and `nzRentVsBuyEngine.ts`) so `index.html` works over `file://` without an in-browser Babel/TypeScript step
 - `vendor/` — local copies of the React/ReactDOM production builds (kept independent of `self-loan-tracker`)
 
 ## Updating the bundle
 
-`app.bundle.js` is generated from `app.jsx` using the pinned `esbuild` dependency in `package.json`. After changing `app.jsx`, regenerate the bundle with:
+`app.bundle.js` is generated from `app.jsx` (which imports `nzRentVsBuyEngine.ts`) using the pinned `esbuild` dependency in `package.json`. After changing `app.jsx` or `nzRentVsBuyEngine.ts`, regenerate the bundle with:
 
 ```sh
 npm ci

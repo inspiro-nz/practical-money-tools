@@ -1,3 +1,11 @@
+import {
+  buildNetWealthSeries,
+  findBreakEvenYear,
+  validateRentVsBuyInputs,
+  clamp,
+  sanitizeNumber,
+} from './nzRentVsBuyEngine';
+
 const { useState, useEffect, useMemo, useRef } = React;
 
 const STORAGE_KEY = 'pmt_rent_vs_buy_data';
@@ -86,137 +94,9 @@ function saveState(state) {
   }
 }
 
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value));
-}
-
 function formatCurrency(value) {
   if (Number.isNaN(value) || value == null) return '—';
   return value.toLocaleString('en-NZ', { style: 'currency', currency: 'NZD', maximumFractionDigits: 0 });
-}
-
-function monthlyPayment(balance, annualRate, months) {
-  if (months <= 0) return 0;
-  const monthlyRate = annualRate / 12 / 100;
-  if (monthlyRate <= 0) return balance / months;
-  return (balance * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -months));
-}
-
-function amortizeTrancheSchedule(tranche, horizonMonths) {
-  const schedule = [];
-  let remainingBalance = tranche.principal;
-  let monthsRemaining = tranche.totalTermMonths;
-  let fixedMonthsLeft = tranche.fixedPeriodMonths;
-
-  for (let monthIndex = 0; monthIndex < horizonMonths && remainingBalance > 0; monthIndex += 1) {
-    const rateAnnual = fixedMonthsLeft > 0 ? tranche.fixedRateAnnual : tranche.floatingRateAnnual;
-    const payment = monthlyPayment(remainingBalance, rateAnnual, monthsRemaining);
-    const monthlyRate = rateAnnual / 12 / 100;
-    const interestPayment = remainingBalance * monthlyRate;
-    let principalPayment = payment - interestPayment;
-    if (principalPayment > remainingBalance) {
-      principalPayment = remainingBalance;
-    }
-    remainingBalance = Math.max(0, remainingBalance - principalPayment);
-    schedule.push({ monthIndex, payment, interestPayment, principalPayment, remainingBalance, rateAnnual });
-    monthsRemaining -= 1;
-    if (fixedMonthsLeft > 0) fixedMonthsLeft -= 1;
-  }
-
-  return schedule;
-}
-
-function buildNetWealthSeries(state) {
-  const horizonMonths = state.horizonYears * 12;
-  const tranches = state.mode === 'advanced'
-    ? state.mortgageTranches.filter(t => t.principal > 0)
-    : [{
-        name: 'A',
-        principal: Math.max(0, state.propertyPrice - state.depositAmount),
-        totalTermMonths: 360,
-        fixedRateAnnual: state.avgInterestRateAnnual,
-        floatingRateAnnual: state.avgInterestRateAnnual,
-        fixedPeriodMonths: 0,
-      }];
-
-  const trancheStates = tranches.map(tranche => ({
-    ...tranche,
-    remainingBalance: tranche.principal,
-    monthsRemaining: tranche.totalTermMonths,
-    fixedMonthsLeft: tranche.fixedPeriodMonths,
-  }));
-
-  let propertyValue = state.propertyPrice;
-  let investorBalance = state.depositAmount;
-  let yearStartBalance = investorBalance;
-  let yearContributions = 0;
-  const monthlyRateProperty = state.propertyInflationRateAnnual / 12 / 100;
-  const monthlyRateInvestment = state.investmentReturnAnnual / 12 / 100;
-  const monthlyRentInflation = state.rentInflationRateAnnual / 12 / 100;
-  const monthlyMaintenanceRate = state.maintenanceRateAnnual / 12 / 100;
-  const monthlyFixedCost = (state.councilRatesAnnual + state.houseInsuranceAnnual) / 12;
-
-  const series = [];
-  let cumulativeHomeownerCost = 0;
-
-  for (let monthIndex = 0; monthIndex < horizonMonths; monthIndex += 1) {
-    if (monthIndex > 0) propertyValue *= 1 + monthlyRateProperty;
-    let monthlyMortgagePayment = 0;
-    let totalLoanBalance = 0;
-
-    trancheStates.forEach(tranche => {
-      if (tranche.remainingBalance <= 0) return;
-      const rateAnnual = tranche.fixedMonthsLeft > 0 ? tranche.fixedRateAnnual : tranche.floatingRateAnnual;
-      const payment = monthlyPayment(tranche.remainingBalance, rateAnnual, tranche.monthsRemaining);
-      const monthlyRate = rateAnnual / 12 / 100;
-      const interestPayment = tranche.remainingBalance * monthlyRate;
-      let principalPayment = payment - interestPayment;
-      if (principalPayment > tranche.remainingBalance) principalPayment = tranche.remainingBalance;
-      tranche.remainingBalance = Math.max(0, tranche.remainingBalance - principalPayment);
-      tranche.monthsRemaining -= 1;
-      if (tranche.fixedMonthsLeft > 0) tranche.fixedMonthsLeft -= 1;
-      monthlyMortgagePayment += interestPayment + principalPayment;
-      totalLoanBalance += tranche.remainingBalance;
-    });
-
-    const homeownerCost = monthlyMortgagePayment + monthlyFixedCost + propertyValue * monthlyMaintenanceRate;
-    const rentCost = state.monthlyRent * Math.pow(1 + monthlyRentInflation, monthIndex);
-    const monthlySurplus = Math.max(0, homeownerCost - rentCost);
-    const contribution = monthlySurplus * (state.savingsDisciplinePercent / 100);
-    investorBalance += contribution;
-    investorBalance += investorBalance * monthlyRateInvestment;
-    yearContributions += contribution;
-
-    if ((monthIndex + 1) % 12 === 0) {
-      const annualGain = investorBalance - yearStartBalance - yearContributions;
-      if (annualGain > 0) {
-        const tax = annualGain * Math.min(state.PIR, 1);
-        investorBalance -= tax;
-      }
-      yearStartBalance = investorBalance;
-      yearContributions = 0;
-    }
-
-    cumulativeHomeownerCost += homeownerCost;
-    const buyerEquity = propertyValue - totalLoanBalance;
-    series.push({
-      monthIndex,
-      year: Number((monthIndex / 12).toFixed(2)),
-      buyerEquity,
-      renterPortfolio: investorBalance,
-      homeownerCost,
-      rentCost,
-      breakEven: investorBalance >= buyerEquity,
-    });
-  }
-
-  return series;
-}
-
-function findBreakEvenYear(series) {
-  const crossover = series.find(point => point.breakEven);
-  if (!crossover) return null;
-  return Math.ceil((crossover.monthIndex + 1) / 12);
 }
 
 function App() {
@@ -233,6 +113,7 @@ function App() {
     };
   }, [state]);
 
+  const validationIssues = useMemo(() => validateRentVsBuyInputs(state), [state]);
   const chartSeries = useMemo(() => buildNetWealthSeries(state), [state]);
   const breakEvenYear = useMemo(() => findBreakEvenYear(chartSeries), [chartSeries]);
   const latestPoint = chartSeries[chartSeries.length - 1] || { buyerEquity: 0, renterPortfolio: 0 };
@@ -241,11 +122,25 @@ function App() {
     setState(prev => ({ ...prev, [key]: value }));
   }
 
+  function updateNumericField(key, rawValue) {
+    setState(prev => ({ ...prev, [key]: sanitizeNumber(rawValue, prev[key]) }));
+  }
+
   function updateTranche(index, field, value) {
     setState(prev => {
       const tranches = prev.mortgageTranches.map((tranche, idx) => {
         if (idx !== index) return tranche;
         return { ...tranche, [field]: value };
+      });
+      return { ...prev, mortgageTranches: tranches };
+    });
+  }
+
+  function updateTrancheNumericField(index, field, rawValue) {
+    setState(prev => {
+      const tranches = prev.mortgageTranches.map((tranche, idx) => {
+        if (idx !== index) return tranche;
+        return { ...tranche, [field]: sanitizeNumber(rawValue, tranche[field]) };
       });
       return { ...prev, mortgageTranches: tranches };
     });
@@ -271,6 +166,17 @@ function App() {
         </div>
       </div>
 
+      {validationIssues.length > 0 && (
+        <section className="card validation-warning">
+          <div className="label">Check your inputs</div>
+          <ul>
+            {validationIssues.map(issue => (
+              <li key={issue}>{issue}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <section className="grid-2">
         <div className="card">
           <div className="label">Mode</div>
@@ -289,30 +195,30 @@ function App() {
       <section className="grid-3">
         <div className="card input-group">
           <label className="label" htmlFor="propertyPrice">Property Price</label>
-          <input id="propertyPrice" type="number" value={state.propertyPrice} onChange={e => updateField('propertyPrice', Number(e.target.value))} />
+          <input id="propertyPrice" type="number" value={state.propertyPrice} onChange={e => updateNumericField('propertyPrice', e.target.value)} />
         </div>
         <div className="card input-group">
           <label className="label" htmlFor="depositAmount">Deposit</label>
-          <input id="depositAmount" type="number" value={state.depositAmount} onChange={e => updateField('depositAmount', Number(e.target.value))} />
+          <input id="depositAmount" type="number" value={state.depositAmount} onChange={e => updateNumericField('depositAmount', e.target.value)} />
         </div>
         <div className="card input-group">
           <label className="label" htmlFor="monthlyRent">Monthly Rent</label>
-          <input id="monthlyRent" type="number" value={state.monthlyRent} onChange={e => updateField('monthlyRent', Number(e.target.value))} />
+          <input id="monthlyRent" type="number" value={state.monthlyRent} onChange={e => updateNumericField('monthlyRent', e.target.value)} />
         </div>
       </section>
 
       <section className="grid-3">
         <div className="card input-group">
           <label className="label" htmlFor="avgInterestRateAnnual">Average Interest Rate</label>
-          <input id="avgInterestRateAnnual" type="number" step="0.01" value={state.avgInterestRateAnnual} onChange={e => updateField('avgInterestRateAnnual', Number(e.target.value))} />
+          <input id="avgInterestRateAnnual" type="number" step="0.01" value={state.avgInterestRateAnnual} onChange={e => updateNumericField('avgInterestRateAnnual', e.target.value)} />
         </div>
         <div className="card input-group">
           <label className="label" htmlFor="investmentReturnAnnual">Expected Investment Return</label>
-          <input id="investmentReturnAnnual" type="number" step="0.1" value={state.investmentReturnAnnual} onChange={e => updateField('investmentReturnAnnual', Number(e.target.value))} />
+          <input id="investmentReturnAnnual" type="number" step="0.1" value={state.investmentReturnAnnual} onChange={e => updateNumericField('investmentReturnAnnual', e.target.value)} />
         </div>
         <div className="card input-group">
           <label className="label" htmlFor="savingsDisciplinePercent">Savings Discipline</label>
-          <input id="savingsDisciplinePercent" type="range" min="0" max="100" value={state.savingsDisciplinePercent} onChange={e => updateField('savingsDisciplinePercent', Number(e.target.value))} />
+          <input id="savingsDisciplinePercent" type="range" min="0" max="100" value={state.savingsDisciplinePercent} onChange={e => updateNumericField('savingsDisciplinePercent', e.target.value)} />
           <div>{state.savingsDisciplinePercent}% of surplus invested</div>
         </div>
       </section>
@@ -332,12 +238,12 @@ function App() {
               </div>
               <div className="input-group">
                 <label className="label" htmlFor="PIR">PIR</label>
-                <input id="PIR" type="number" step="0.01" value={state.PIR * 100} onChange={e => updateField('PIR', clamp(Number(e.target.value) / 100, 0, 1))} />
+                <input id="PIR" type="number" step="0.01" value={state.PIR * 100} onChange={e => updateField('PIR', clamp(sanitizeNumber(e.target.value, state.PIR * 100) / 100, 0, 1))} />
                 <div className="small-note">Annual PIE tax rate (default capped at 28%).</div>
               </div>
               <div className="input-group">
                 <label className="label" htmlFor="maintenanceRateAnnual">Maintenance Rate</label>
-                <input id="maintenanceRateAnnual" type="number" step="0.01" value={state.maintenanceRateAnnual} onChange={e => updateField('maintenanceRateAnnual', Number(e.target.value))} />
+                <input id="maintenanceRateAnnual" type="number" step="0.01" value={state.maintenanceRateAnnual} onChange={e => updateNumericField('maintenanceRateAnnual', e.target.value)} />
                 <div className="small-note">Annual maintenance percentage of property value.</div>
               </div>
             </div>
@@ -357,23 +263,23 @@ function App() {
               <div key={tranche.name} className="grid-3" style={{ marginTop: '1rem' }}>
                 <div className="input-group">
                   <label className="label">Tranche {tranche.name} Principal</label>
-                  <input type="number" value={tranche.principal} onChange={e => updateTranche(index, 'principal', Number(e.target.value))} />
+                  <input type="number" value={tranche.principal} onChange={e => updateTrancheNumericField(index, 'principal', e.target.value)} />
                 </div>
                 <div className="input-group">
                   <label className="label">Fixed Rate</label>
-                  <input type="number" step="0.01" value={tranche.fixedRateAnnual} onChange={e => updateTranche(index, 'fixedRateAnnual', Number(e.target.value))} />
+                  <input type="number" step="0.01" value={tranche.fixedRateAnnual} onChange={e => updateTrancheNumericField(index, 'fixedRateAnnual', e.target.value)} />
                 </div>
                 <div className="input-group">
                   <label className="label">Fixed Term (months)</label>
-                  <input type="number" value={tranche.fixedPeriodMonths} onChange={e => updateTranche(index, 'fixedPeriodMonths', Number(e.target.value))} />
+                  <input type="number" value={tranche.fixedPeriodMonths} onChange={e => updateTrancheNumericField(index, 'fixedPeriodMonths', e.target.value)} />
                 </div>
                 <div className="input-group">
                   <label className="label">Floating Rate</label>
-                  <input type="number" step="0.01" value={tranche.floatingRateAnnual} onChange={e => updateTranche(index, 'floatingRateAnnual', Number(e.target.value))} />
+                  <input type="number" step="0.01" value={tranche.floatingRateAnnual} onChange={e => updateTrancheNumericField(index, 'floatingRateAnnual', e.target.value)} />
                 </div>
                 <div className="input-group">
                   <label className="label">Term (months)</label>
-                  <input type="number" value={tranche.totalTermMonths} onChange={e => updateTranche(index, 'totalTermMonths', Number(e.target.value))} />
+                  <input type="number" value={tranche.totalTermMonths} onChange={e => updateTrancheNumericField(index, 'totalTermMonths', e.target.value)} />
                 </div>
               </div>
             ))}

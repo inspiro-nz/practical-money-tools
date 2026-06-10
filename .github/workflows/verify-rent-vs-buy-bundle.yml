@@ -1,0 +1,42 @@
+name: Verify rent-vs-buy bundle
+
+on:
+  push:
+    paths:
+      - 'rent-vs-buy-calculator/app.jsx'
+      - 'rent-vs-buy-calculator/app.bundle.js'
+      - '.github/workflows/verify-rent-vs-buy-bundle.yml'
+  pull_request:
+    paths:
+      - 'rent-vs-buy-calculator/app.jsx'
+      - 'rent-vs-buy-calculator/app.bundle.js'
+      - '.github/workflows/verify-rent-vs-buy-bundle.yml'
+
+jobs:
+  verify-bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rebuild app.bundle.js from app.jsx
+        working-directory: rent-vs-buy-calculator
+        run: npx --yes esbuild@0.28.0 app.jsx --bundle --minify --format=iife --target=es2018 --outfile=app.bundle.fresh.js
+
+      - name: Compare against committed bundle
+        working-directory: rent-vs-buy-calculator
+        run: |
+          # app.bundle.js has no header comment, so this is a full-file diff.
+          # Normalize line endings and trailing whitespace the same way on both
+          # sides so incidental formatting differences don't fail CI.
+          normalize() {
+            sed -e 's/\r$//' -e 's/[[:space:]]*$//' "$1"
+          }
+
+          normalize app.bundle.js > app.bundle.committed-normalized.js
+          normalize app.bundle.fresh.js > app.bundle.fresh-normalized.js
+
+          if ! diff -u app.bundle.committed-normalized.js app.bundle.fresh-normalized.js; then
+            echo "::error::app.bundle.js is out of date with app.jsx. Regenerate it with: npx esbuild@0.28.0 app.jsx --bundle --minify --format=iife --target=es2018 --outfile=app.bundle.js"
+            exit 1
+          fi
+          echo "app.bundle.js is up to date with app.jsx"

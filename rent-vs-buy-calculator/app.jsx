@@ -95,11 +95,6 @@ function formatCurrency(value) {
   return value.toLocaleString('en-NZ', { style: 'currency', currency: 'NZD', maximumFractionDigits: 0 });
 }
 
-function formatPercent(value) {
-  if (Number.isNaN(value) || value == null) return '—';
-  return `${value.toFixed(2)}%`;
-}
-
 function monthlyPayment(balance, annualRate, months) {
   if (months <= 0) return 0;
   const monthlyRate = annualRate / 12 / 100;
@@ -226,7 +221,6 @@ function findBreakEvenYear(series) {
 
 function App() {
   const [state, setState] = useState(loadSavedState);
-  const [showAdvanced, setShowAdvanced] = useState(loadSavedState().mode === 'advanced');
   const saveTimer = useRef(null);
 
   useEffect(() => {
@@ -268,12 +262,6 @@ function App() {
     }));
   }
 
-  const currentRate = state.mode === 'advanced'
-    ? state.mortgageTranches[0]?.fixedRateAnnual || state.avgInterestRateAnnual
-    : state.avgInterestRateAnnual;
-
-  const simpleMortgageBalance = Math.max(0, state.propertyPrice - state.depositAmount);
-
   return (
     <div className="page-shell">
       <div className="header">
@@ -293,8 +281,8 @@ function App() {
         </div>
 
         <div className="card">
-          <div className="label">Advanced NZ Mortgage Features</div>
-          <button type="button" onClick={() => setShowAdvanced(open => !open)}>{showAdvanced ? 'Hide' : 'Show'} advanced settings</button>
+          <div className="label">Advanced Settings</div>
+          <div style={{ fontSize: '0.9rem', color: '#475569' }}>{state.mode === 'advanced' ? 'Advanced settings shown below' : 'Toggle mode above to access advanced settings'}</div>
         </div>
       </section>
 
@@ -329,7 +317,7 @@ function App() {
         </div>
       </section>
 
-      {showAdvanced && (
+      {state.mode === 'advanced' && (
         <>
           <h2 className="section-title">Advanced NZ Mortgage Features</h2>
           <section className="card">
@@ -415,9 +403,8 @@ function App() {
       </section>
 
       <section className="card">
-        <h3>Debug data structure</h3>
-        <div className="small-note">The UI prepares the following arrays for charting and crossover detection.</div>
-        <pre>{JSON.stringify({ chartSeriesLength: chartSeries.length, breakEvenYear, lastPoint: { buyerEquity: Math.round(latestPoint.buyerEquity), renterPortfolio: Math.round(latestPoint.renterPortfolio) } }, null, 2)}</pre>
+        <h3>Data integrity check</h3>
+        <div className="small-note">Series length: {chartSeries.length} months | Break-even: {breakEvenYear ? `Year ${breakEvenYear}` : 'Not reached'}</div>
       </section>
     </div>
   );
